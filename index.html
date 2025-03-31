@@ -4,264 +4,356 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Last Oasis Dedicated Server Setup Guide</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              "lo-brown": {
+                900: "#1a1410",
+                800: "#261c15",
+                700: "#2d211c",
+                600: "#3d2f27",
+              },
+              "lo-orange": {
+                500: "#ff6b1a",
+                400: "#ff8c38",
+                300: "#ffa94d",
+              },
+            },
+          },
+        },
+      };
+    </script>
     <style>
-      body {
-        font-family: Arial, sans-serif;
-        margin: 20px;
-        line-height: 1.8;
-        background-color: #121212;
-        color: #e0e0e0;
-      }
-      h1,
-      h2,
-      h3 {
-        color: #bb86fc;
-      }
-      h1 {
-        text-align: center;
-        margin-bottom: 30px;
-      }
-      h2 {
-        border-bottom: 2px solid #03dac6;
-        padding-bottom: 5px;
-        margin-top: 40px;
-      }
-      ul {
-        margin-left: 20px;
-      }
-      li {
-        margin-bottom: 10px;
-      }
-      code {
-        background-color: #1e1e1e;
-        padding: 2px 5px;
-        border-radius: 3px;
-        font-family: Consolas, monospace;
-        color: #03dac6;
-      }
-      pre {
-        background-color: #1e1e1e;
-        padding: 15px;
-        border-radius: 5px;
-        overflow-x: auto;
-        border: 1px solid #333;
-        margin-bottom: 20px;
-      }
       .step {
-        margin-bottom: 30px;
-        padding: 15px;
-        background-color: #1e1e1e;
-        border: 1px solid #333;
-        border-radius: 5px;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+        transition: all 0.3s ease;
       }
-      .highlight {
-        color: #cf6679;
-        font-weight: bold;
+      .step:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 15px -3px rgba(255, 107, 26, 0.2), 0 4px 6px -2px rgba(255, 107, 26, 0.1);
       }
-      .note {
-        background-color: #2a2a2a;
-        padding: 10px;
-        border-left: 4px solid #03dac6;
-        margin: 20px 0;
-        border-radius: 3px;
+
+      .download-btn {
+        transition: all 0.3s ease;
       }
+      .download-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 6px -1px rgba(255, 107, 26, 0.2);
+      }
+
       a {
-        color: #03dac6;
-        text-decoration: none;
+        transition: all 0.2s ease;
+        position: relative;
       }
-      a:hover {
-        text-decoration: underline;
+
+      a:after {
+        content: '';
+        position: absolute;
+        width: 0;
+        height: 2px;
+        bottom: -2px;
+        left: 0;
+        background-color: #ff6b1a;
+        transition: width 0.3s ease;
       }
-      .toc {
-        background-color: #1e1e1e;
-        padding: 15px;
-        border-radius: 5px;
-        margin-bottom: 30px;
+
+      a:hover:after {
+        width: 100%;
       }
-      .toc ul {
-        list-style-type: none;
-        padding: 0;
+
+      html {
+        scroll-behavior: smooth;
       }
-      .toc li {
-        margin-bottom: 10px;
+
+      .note {
+        transition: all 0.3s ease;
       }
-      .toc a {
-        font-weight: bold;
+      .note:hover {
+        transform: scale(1.02);
       }
     </style>
+    <script>
+      function downloadBatFile(serverNum = 1) {
+        let port = 5555;
+        let queryPort = 27015;
+        let identifier = "neon_server1";
+
+        if (serverNum === 2) {
+          port = 5556;
+          queryPort = 27016;
+          identifier = "neon_server2";
+        } else if (serverNum === 3) {
+          port = 5557;
+          queryPort = 27017;
+          identifier = "neon_server3";
+        }
+
+        const batContent = `@echo off
+:: #########################################################
+:: # Set Variables #
+:: #########################################################
+
+set Identifier=${identifier}
+set Port=${port}
+set CustomerKey=a54iesJ4Ga0MC1Pt
+set ProviderKey=AM0hLmhwg75xIBdH
+set Slots=5
+set QueryPort=${queryPort}
+set OCA=YOUREXTERNALIP
+
+MistServer.exe -log -identifier=%Identifier% -port=%Port% -CustomerKey=%CustomerKey% -ProviderKey=%ProviderKey% -slots=%Slots% -QueryPort=%QueryPort% -OverrideConnectionAddress=%OCA%
+exit`;
+
+        const blob = new Blob([batContent], { type: "text/plain" });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `Server${serverNum}.bat`;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+      }
+    </script>
   </head>
-  <body>
-    <h1>Last Oasis Dedicated Server Setup Guide</h1>
+  <body class="bg-lo-brown-900 text-[#e0d5cc] font-sans leading-relaxed">
+    <div class="container mx-auto px-4 py-8 max-w-4xl">
+      <h1 class="text-lo-orange-400 text-4xl md:text-5xl text-center font-bold mb-8">
+        Last Oasis Dedicated Server Setup Guide
+      </h1>
 
-    <div class="toc">
-      <h2>Table of Contents:</h2>
-      <ul>
-        <li><a href="#step1">Step 1: Access Steam</a></li>
-        <li><a href="#step2">Step 2: Install Dedicated Server</a></li>
-        <li>
-          <a href="#step3">Step 3: Locate `MistServer.exe` File</a>
-        </li>
-        <li><a href="#step4">Step 4: Create a `.bat` File</a></li>
-        <li>
-          <a href="#step5">Step 5: Configure File Explorer Settings</a>
-        </li>
-        <li><a href="#step6">Step 6: Change File Extension from `.txt` to `.bat`</a></li>
-        <li>
-          <a href="#step7"
-            >Step 7: Log in to Server Control Panel</a
-          >
-        </li>
-        <li>
-          <a href="#step8">Step 8: Generate New Provider Key</a>
-        </li>
-        <li>
-          <a href="#step9"
-            >Step 9: Copy Information from Official Documentation</a
-          >
-        </li>
-        <li>
-          <a href="#step10">Step 10: Configure External IP Address</a>
-        </li>
-        <li>
-          <a href="#step11"
-            >Step 11: Advanced `.bat` File Configuration</a
-          >
-        </li>
-        <li><a href="#step12">Step 12: Realm Management</a></li>
-        <li><a href="#step13">Step 13: Oasis Management</a></li>
-        <li><a href="#support">Additional Support</a></li>
-      </ul>
-    </div>
-
-    <div class="step" id="step1">
-      <h2>Step 1: Access Steam</h2>
-      <p>Open your Steam account.</p>
-      <ul>
-        <li>Go to the <strong>Library</strong> section.</li>
-        <li>
-          In the left column, ensure the following options are selected:
-        </li>
-        <ul>
-          <li><strong>Games</strong></li>
-          <li><strong>Tools</strong></li>
+      <div class="bg-lo-brown-800 p-4 md:p-6 rounded-lg mb-8 shadow-lg">
+        <h2 class="text-lo-orange-400 text-2xl md:text-3xl mb-4 font-semibold">Contents:</h2>
+        <ul class="grid grid-cols-1 md:grid-cols-2 gap-2">
+          <li class="transition-all duration-200 hover:translate-x-2">
+            <a href="#step1" class="text-lo-orange-300 hover:text-lo-orange-500 block p-2 rounded hover:bg-lo-brown-700">
+              Step 1: Access Steam
+            </a>
+          </li>
+          <li class="transition-all duration-200 hover:translate-x-2">
+            <a href="#step2" class="text-lo-orange-300 hover:text-lo-orange-500 block p-2 rounded hover:bg-lo-brown-700">
+              Step 2: Install Dedicated Server
+            </a>
+          </li>
+          <li class="transition-all duration-200 hover:translate-x-2">
+            <a href="#step3" class="text-lo-orange-300 hover:text-lo-orange-500 block p-2 rounded hover:bg-lo-brown-700">
+              Step 3: Locate `MistServer.exe`
+            </a>
+          </li>
+          <li class="transition-all duration-200 hover:translate-x-2">
+            <a href="#step4" class="text-lo-orange-300 hover:text-lo-orange-500 block p-2 rounded hover:bg-lo-brown-700">
+              Step 4: Create `.bat` File
+            </a>
+          </li>
+          <li class="transition-all duration-200 hover:translate-x-2">
+            <a href="#step5" class="text-lo-orange-300 hover:text-lo-orange-500 block p-2 rounded hover:bg-lo-brown-700">
+              Step 5: Configure File Explorer
+            </a>
+          </li>
+          <li class="transition-all duration-200 hover:translate-x-2">
+            <a href="#step6" class="text-lo-orange-300 hover:text-lo-orange-500 block p-2 rounded hover:bg-lo-brown-700">
+              Step 6: Rename `.txt` to `.bat`
+            </a>
+          </li>
+          <li class="transition-all duration-200 hover:translate-x-2">
+            <a href="#step7" class="text-lo-orange-300 hover:text-lo-orange-500 block p-2 rounded hover:bg-lo-brown-700">
+              Step 7: Access Server Control Panel
+            </a>
+          </li>
+          <li class="transition-all duration-200 hover:translate-x-2">
+            <a href="#step8" class="text-lo-orange-300 hover:text-lo-orange-500 block p-2 rounded hover:bg-lo-brown-700">
+              Step 8: Generate Provider Key
+            </a>
+          </li>
+          <li class="transition-all duration-200 hover:translate-x-2">
+            <a href="#step9" class="text-lo-orange-300 hover:text-lo-orange-500 block p-2 rounded hover:bg-lo-brown-700">
+              Step 9: Copy Documentation Info
+            </a>
+          </li>
+          <li class="transition-all duration-200 hover:translate-x-2">
+            <a href="#step10" class="text-lo-orange-300 hover:text-lo-orange-500 block p-2 rounded hover:bg-lo-brown-700">
+              Step 10: Set External IP Address
+            </a>
+          </li>
+          <li class="transition-all duration-200 hover:translate-x-2">
+            <a href="#step11" class="text-lo-orange-300 hover:text-lo-orange-500 block p-2 rounded hover:bg-lo-brown-700">
+              Step 11: Advanced `.bat` Configuration
+            </a>
+          </li>
+          <li class="transition-all duration-200 hover:translate-x-2">
+            <a href="#step12" class="text-lo-orange-300 hover:text-lo-orange-500 block p-2 rounded hover:bg-lo-brown-700">
+              Step 12: Realm Management
+            </a>
+          </li>
+          <li class="transition-all duration-200 hover:translate-x-2">
+            <a href="#step13" class="text-lo-orange-300 hover:text-lo-orange-500 block p-2 rounded hover:bg-lo-brown-700">
+              Step 13: Oasis Management
+            </a>
+          </li>
+          <li class="transition-all duration-200 hover:translate-x-2">
+            <a href="#support" class="text-lo-orange-300 hover:text-lo-orange-500 block p-2 rounded hover:bg-lo-brown-700">
+              Additional Support
+            </a>
+          </li>
         </ul>
-      </ul>
-    </div>
-
-    <div class="step" id="step2">
-      <h2>Step 2: Install Dedicated Server</h2>
-      <p>Search and install the "Last Oasis" dedicated server.</p>
-      <ul>
-        <li>
-          If you have a Windows server with root access, install Steam on the machine and begin installation.
-        </li>
-      </ul>
-    </div>
-
-    <div class="step" id="step3">
-      <h2>Step 3: Locate `MistServer.exe` File</h2>
-      <p>
-        After installation completes, navigate to the installation directory containing `MistServer.exe`.
-      </p>
-      <p>Typical path:</p>
-      <code
-        >Steam\LastOasis\steamapps\common\Last Oasis - Dedicated Server</code
-      >
-    </div>
-
-    <div class="step" id="step4">
-      <h2>Step 4: Create a `.bat` File</h2>
-      <p>
-        Create a text file named <strong>`Server1.bat`</strong> in the same directory as `MistServer.exe`.
-      </p>
-      <ul>
-        <li>
-          You can create additional servers by making files like `Server2.bat`, `Server3.bat`, etc.
-        </li>
-      </ul>
-    </div>
-
-    <div class="step" id="step5">
-      <h2>Step 5: Configure File Explorer Settings</h2>
-      <p>
-        Open the <strong>Control Panel</strong> and navigate to
-        <strong>File Explorer Options</strong>.
-      </p>
-      <ul>
-        <li>
-          Disable the option
-          <strong>Hide extensions for known file types</strong>.
-        </li>
-      </ul>
-    </div>
-
-    <div class="step" id="step6">
-      <h2>Step 6: Change File Extension from `.txt` to `.bat`</h2>
-      <p>
-        Rename the `Server1.txt` file to `Server1.bat` by removing the `.txt` extension.
-      </p>
-    </div>
-
-    <div class="step" id="step7">
-      <h2>Step 7: Log in to Server Control Panel</h2>
-      <p>
-        Log in to the Last Oasis server control panel using your Steam account:
-      </p>
-      <ul>
-        <li>
-          URL:
-          <a href="http://myrealm.lastoasis.gg/Account/Signin"
-            >http://myrealm.lastoasis.gg/Account/Signin</a
-          >
-        </li>
-        <li>Navigate to the <strong>Settings</strong> tab.</li>
-      </ul>
-    </div>
-
-    <div class="step" id="step8">
-      <h2>Step 8: Generate New Provider Key</h2>
-      <p>
-        Create a new <strong>Provider Key</strong>. The
-        <strong>Customer Key</strong> cannot be changed.
-      </p>
-      <ul>
-        <li>Follow the instructions to generate the key.</li>
-      </ul>
-    </div>
-
-    <div class="step" id="step9">
-      <h2>
-        Step 9: Copy Information from Official Documentation
-      </h2>
-      <p>
-        Copy configuration information from the official documentation file for the `.bat` file and paste it into your created file (`Server1.bat`).
-      </p>
-    </div>
-
-    <div class="step" id="step10">
-      <h2>Step 10: Configure External IP Address</h2>
-      <p>Determine your external IP address using websites like:</p>
-      <ul>
-        <li>
-          <a href="https://whatismyipaddress.com/de/meine-ip"
-            >https://whatismyipaddress.com/de/meine-ip</a
-          >
-        </li>
-      </ul>
-      <div class="note">
-        <strong>Note:</strong> If hosting from home, your IP may change every 24 hours or when restarting your router. Update the IP address in the `.bat` file as needed.
       </div>
-    </div>
 
-    <div class="step" id="step11">
-      <h2>Step 11: Advanced `.bat` File Configuration</h2>
-      <p>
-        You can create a more structured `.bat` file for better visibility and organization.
-      </p>
-      <pre>
-<code>
-@echo off
+      <!-- Step 1 -->
+      <div class="step bg-lo-brown-800 border border-lo-brown-600 rounded-lg p-4 md:p-6 mb-8 shadow-lg" id="step1">
+        <h2 class="text-lo-orange-400 text-2xl md:text-3xl border-b-2 border-lo-orange-500 pb-2 mb-4 font-semibold">
+          Step 1: Access Steam
+        </h2>
+        <div class="space-y-3 text-base md:text-lg">
+          <p>Open your Steam account.</p>
+          <ul class="list-disc pl-5 space-y-2">
+            <li>Go to the <strong>Library</strong> section.</li>
+            <li>In the left column, ensure the following options are selected:</li>
+            <ul class="list-disc pl-5 space-y-1">
+              <li><strong>Games</strong></li>
+              <li><strong>Tools</strong></li>
+            </ul>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Step 2 -->
+      <div class="step bg-lo-brown-800 border border-lo-brown-600 rounded-lg p-4 md:p-6 mb-8 shadow-lg" id="step2">
+        <h2 class="text-lo-orange-400 text-2xl md:text-3xl border-b-2 border-lo-orange-500 pb-2 mb-4 font-semibold">
+          Step 2: Install Dedicated Server
+        </h2>
+        <div class="space-y-3 text-base md:text-lg">
+          <p>Search and install the "Last Oasis" dedicated server.</p>
+          <ul class="list-disc pl-5 space-y-2">
+            <li>If you have a Windows server with root access, install Steam on the machine and begin installation.</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Step 3 -->
+      <div class="step bg-lo-brown-800 border border-lo-brown-600 rounded-lg p-4 md:p-6 mb-8 shadow-lg" id="step3">
+        <h2 class="text-lo-orange-400 text-2xl md:text-3xl border-b-2 border-lo-orange-500 pb-2 mb-4 font-semibold">
+          Step 3: Locate `MistServer.exe`
+        </h2>
+        <div class="space-y-3 text-base md:text-lg">
+          <p>After installation completes, navigate to the installation directory containing `MistServer.exe`.</p>
+          <p>Typical path:</p>
+          <code class="bg-lo-brown-700 px-3 py-1 rounded text-lo-orange-300 font-mono border border-lo-brown-600 inline-block">
+            Steam\LastOasis\steamapps\common\Last Oasis - Dedicated Server
+          </code>
+        </div>
+      </div>
+
+      <!-- Step 4 -->
+      <div class="step bg-lo-brown-800 border border-lo-brown-600 rounded-lg p-4 md:p-6 mb-8 shadow-lg" id="step4">
+        <h2 class="text-lo-orange-400 text-2xl md:text-3xl border-b-2 border-lo-orange-500 pb-2 mb-4 font-semibold">
+          Step 4: Create `.bat` File
+        </h2>
+        <div class="space-y-3 text-base md:text-lg">
+          <p>Create a text file named <strong>`Server1.bat`</strong> in the same location as `MistServer.exe`.</p>
+          <ul class="list-disc pl-5 space-y-2">
+            <li>You can create additional servers by making files like `Server2.bat`, `Server3.bat`, etc.</li>
+          </ul>
+          <div class="flex flex-wrap gap-3 mt-4">
+            <button onclick="downloadBatFile(1)" class="download-btn bg-lo-orange-500 text-lo-brown-900 px-5 py-2 rounded font-medium hover:bg-lo-orange-400">
+              Download Server1.bat (Port 5555)
+            </button>
+            <button onclick="downloadBatFile(2)" class="download-btn bg-lo-orange-500 text-lo-brown-900 px-5 py-2 rounded font-medium hover:bg-lo-orange-400">
+              Download Server2.bat (Port 5556)
+            </button>
+            <button onclick="downloadBatFile(3)" class="download-btn bg-lo-orange-500 text-lo-brown-900 px-5 py-2 rounded font-medium hover:bg-lo-orange-400">
+              Download Server3.bat (Port 5557)
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 5 -->
+      <div class="step bg-lo-brown-800 border border-lo-brown-600 rounded-lg p-4 md:p-6 mb-8 shadow-lg" id="step5">
+        <h2 class="text-lo-orange-400 text-2xl md:text-3xl border-b-2 border-lo-orange-500 pb-2 mb-4 font-semibold">
+          Step 5: Configure File Explorer
+        </h2>
+        <div class="space-y-3 text-base md:text-lg">
+          <p>Go to <strong>Control Panel</strong> and open <strong>File Explorer Options</strong>.</p>
+          <ul class="list-disc pl-5 space-y-2">
+            <li>Disable the <strong>Hide extensions for known file types</strong> option.</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Step 6 -->
+      <div class="step bg-lo-brown-800 border border-lo-brown-600 rounded-lg p-4 md:p-6 mb-8 shadow-lg" id="step6">
+        <h2 class="text-lo-orange-400 text-2xl md:text-3xl border-b-2 border-lo-orange-500 pb-2 mb-4 font-semibold">
+          Step 6: Rename `.txt` to `.bat`
+        </h2>
+        <div class="space-y-3 text-base md:text-lg">
+          <p>Rename the `Server1.txt` file to `Server1.bat` by removing the `.txt` extension.</p>
+        </div>
+      </div>
+
+      <!-- Step 7 -->
+      <div class="step bg-lo-brown-800 border border-lo-brown-600 rounded-lg p-4 md:p-6 mb-8 shadow-lg" id="step7">
+        <h2 class="text-lo-orange-400 text-2xl md:text-3xl border-b-2 border-lo-orange-500 pb-2 mb-4 font-semibold">
+          Step 7: Access Server Control Panel
+        </h2>
+        <div class="space-y-3 text-base md:text-lg">
+          <p>Log in to the Last Oasis server control page using your Steam account:</p>
+          <ul class="list-disc pl-5 space-y-2">
+            <li>URL: <a href="http://myrealm.lastoasis.gg/Account/Signin" class="text-lo-orange-300">http://myrealm.lastoasis.gg/Account/Signin</a></li>
+            <li>Go to the <strong>Settings</strong> tab.</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Step 8 -->
+      <div class="step bg-lo-brown-800 border border-lo-brown-600 rounded-lg p-4 md:p-6 mb-8 shadow-lg" id="step8">
+        <h2 class="text-lo-orange-400 text-2xl md:text-3xl border-b-2 border-lo-orange-500 pb-2 mb-4 font-semibold">
+          Step 8: Generate Provider Key
+        </h2>
+        <div class="space-y-3 text-base md:text-lg">
+          <p>Create a new <strong>Provider Key</strong>. The <strong>Customer Key</strong> cannot be changed.</p>
+          <ul class="list-disc pl-5 space-y-2">
+            <li>Follow the instructions to generate the key.</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Step 9 -->
+      <div class="step bg-lo-brown-800 border border-lo-brown-600 rounded-lg p-4 md:p-6 mb-8 shadow-lg" id="step9">
+        <h2 class="text-lo-orange-400 text-2xl md:text-3xl border-b-2 border-lo-orange-500 pb-2 mb-4 font-semibold">
+          Step 9: Copy Official Documentation Info
+        </h2>
+        <div class="space-y-3 text-base md:text-lg">
+          <p>Copy the information from the official documentation file for the `.bat` file and paste it into your created file (`Server1.bat`).</p>
+        </div>
+      </div>
+
+      <!-- Step 10 -->
+      <div class="step bg-lo-brown-800 border border-lo-brown-600 rounded-lg p-4 md:p-6 mb-8 shadow-lg" id="step10">
+        <h2 class="text-lo-orange-400 text-2xl md:text-3xl border-b-2 border-lo-orange-500 pb-2 mb-4 font-semibold">
+          Step 10: Set External IP Address
+        </h2>
+        <div class="space-y-3 text-base md:text-lg">
+          <p>Determine your external IP address using a website like:</p>
+          <ul class="list-disc pl-5 space-y-2">
+            <li><a href="https://whatismyipaddress.com/de/meine-ip" class="text-lo-orange-300">https://whatismyipaddress.com/de/meine-ip</a></li>
+          </ul>
+          <div class="note bg-lo-brown-700 p-4 border-l-4 border-lo-orange-500 rounded my-5">
+            <strong>Note:</strong> If hosting the server at home, your IP address may change every 24 hours or when restarting the router. Update the IP address in the `.bat` file as needed.
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 11 -->
+      <div class="step bg-lo-brown-800 border border-lo-brown-600 rounded-lg p-4 md:p-6 mb-8 shadow-lg" id="step11">
+        <h2 class="text-lo-orange-400 text-2xl md:text-3xl border-b-2 border-lo-orange-500 pb-2 mb-4 font-semibold">
+          Step 11: Advanced `.bat` Configuration
+        </h2>
+        <div class="space-y-3 text-base md:text-lg">
+          <p>You can create a more structured `.bat` file for better visibility and organization.</p>
+          <pre class="bg-lo-brown-700 p-4 rounded-lg overflow-x-auto border border-lo-brown-600 mb-5">
+            <code class="font-mono text-lo-orange-300">@echo off
 :: #########################################################
 :: # Set Variables #
 :: #########################################################
@@ -275,86 +367,114 @@ set QueryPort=27015
 set OCA=YOUREXTERNALIP
 
 MistServer.exe -log -identifier=%Identifier% -port=%Port% -CustomerKey=%CustomerKey% -ProviderKey=%ProviderKey% -slots=%Slots% -QueryPort=%QueryPort% -OverrideConnectionAddress=%OCA%
-exit
-</code>
-        </pre>
+exit</code>
+          </pre>
+          <div class="flex flex-wrap gap-3">
+            <button onclick="downloadBatFile(1)" class="download-btn bg-lo-orange-500 text-lo-brown-900 px-5 py-2 rounded font-medium hover:bg-lo-orange-400">
+              Download Server1.bat (Port 5555)
+            </button>
+            <button onclick="downloadBatFile(2)" class="download-btn bg-lo-orange-500 text-lo-brown-900 px-5 py-2 rounded font-medium hover:bg-lo-orange-400">
+              Download Server2.bat (Port 5556)
+            </button>
+            <button onclick="downloadBatFile(3)" class="download-btn bg-lo-orange-500 text-lo-brown-900 px-5 py-2 rounded font-medium hover:bg-lo-orange-400">
+              Download Server3.bat (Port 5557)
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 12 -->
+      <div class="step bg-lo-brown-800 border border-lo-brown-600 rounded-lg p-4 md:p-6 mb-8 shadow-lg" id="step12">
+        <h2 class="text-lo-orange-400 text-2xl md:text-3xl border-b-2 border-lo-orange-500 pb-2 mb-4 font-semibold">
+          Step 12: Realm Management
+        </h2>
+        <div class="space-y-3 text-base md:text-lg">
+          <p>You can have more than 2 active servers simultaneously. Each server represents an Oasis in the Realm.</p>
+          <ul class="list-disc pl-5 space-y-2">
+            <li>To manage multiple servers:
+              <ul class="list-disc pl-5 space-y-2">
+                <li>Change the <code class="bg-lo-brown-700 px-1 text-lo-orange-300 font-mono">ports</code> and query ports (<code class="bg-lo-brown-700 px-1 text-lo-orange-300 font-mono">QueryPorts</code>) to avoid conflicts.</li>
+                <li>Example port ranges:
+                  <ul class="list-disc pl-5 space-y-1">
+                    <li>Ports: <code class="bg-lo-brown-700 px-1 text-lo-orange-300 font-mono">29015-29017</code></li>
+                    <li>Query Ports: <code class="bg-lo-brown-700 px-1 text-lo-orange-300 font-mono">5565-5567</code></li>
+                  </ul>
+                </li>
+                <li>The <code class="bg-lo-brown-700 px-1 text-lo-orange-300 font-mono">identifier</code> can be the same name or different for each server.</li>
+                <li>View server configurations in the dashboard under <strong>Game Servers</strong>.</li>
+              </ul>
+            </li>
+          </ul>
+          <p class="font-semibold mt-4">Realm Configuration:</p>
+          <ul class="list-disc pl-5 space-y-2">
+            <li>Once a Realm is created, go to <strong>View</strong> to see corresponding settings.</li>
+            <li>You can change the Realm name for in-game display, adjust multipliers, admins, and more.</li>
+            <li>More options will be available in the future.</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Step 13 -->
+      <div class="step bg-lo-brown-800 border border-lo-brown-600 rounded-lg p-4 md:p-6 mb-8 shadow-lg" id="step13">
+        <h2 class="text-lo-orange-400 text-2xl md:text-3xl border-b-2 border-lo-orange-500 pb-2 mb-4 font-semibold">
+          Step 13: Oasis Management
+        </h2>
+        <div class="space-y-3 text-base md:text-lg">
+          <p>You can manage multiple Oases for the servers. However, only 3 Oases will be active when running 3 servers.</p>
+          <ul class="list-disc pl-5 space-y-2">
+            <li>To start event maps in different root systems or local systems:
+              <ul class="list-disc pl-5 space-y-2">
+                <li>The <strong>Provider Key</strong> and <strong>Customer Key</strong> must match those used in the same Realm.</li>
+                <li>Event maps can be enabled in the <strong>Events</strong> section of the dashboard.</li>
+              </ul>
+            </li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Support -->
+      <div class="step bg-lo-brown-800 border border-lo-brown-600 rounded-lg p-4 md:p-6 mb-8 shadow-lg" id="support">
+        <h2 class="text-lo-orange-400 text-2xl md:text-3xl border-b-2 border-lo-orange-500 pb-2 mb-4 font-semibold">
+          Additional Support
+        </h2>
+        <div class="space-y-3 text-base md/text-lg">
+          <p>If you have questions, you can consult the friendly developers or community members on Discord:</p>
+          <ul class="list-disc pl-5 space-y-2">
+            <li>Discord channel: <a href="https://discord.com/channels/440538424991154177/870332804578304070/870475904625836032" class="text-lo-orange-300">https://discord.com/channels/440538424991154177/870332804578304070/870475904625836032</a></li>
+          </ul>
+        </div>
+      </div>
     </div>
 
-    <div class="step" id="step12">
-      <h2>Step 12: Realm Management</h2>
-      <p>
-        You can have more than 2 active servers running simultaneously. Each server represents an Oasis in the Realm.
-      </p>
-      <ul>
-        <li>To manage multiple servers:</li>
-        <ul>
-          <li>
-            Change <code>ports</code> and <code>QueryPorts</code> to avoid conflicts.
-          </li>
-          <li>
-            Example port ranges:
-            <ul>
-              <li>Ports: <code>29015-29017</code></li>
-              <li>Query Ports: <code>5565-5567</code></li>
-            </ul>
-          </li>
-          <li>
-            The <code>identifier</code> can be the same name or different for each server.
-          </li>
-          <li>
-            View server configurations in the dashboard under
-            <strong>Game Servers</strong>.
-          </li>
-        </ul>
-      </ul>
-      <p><strong>Realm Configuration:</strong></p>
-      <ul>
-        <li>
-          After creating a Realm, click <strong>View</strong> to display its settings.
-        </li>
-        <li>
-          You can rename the Realm for in-game display, adjust multipliers, manage admins, and more.
-        </li>
-        <li>Additional options will be available in future updates.</li>
-      </ul>
-    </div>
+    <script>
+      document.addEventListener('DOMContentLoaded', function() {
+        if (window.location.hash) {
+          const targetElement = document.querySelector(window.location.hash);
+          if (targetElement) {
+            targetElement.classList.add('ring-4', 'ring-lo-orange-500', 'ring-opacity-50');
+            setTimeout(() => {
+              targetElement.classList.remove('ring-4', 'ring-lo-orange-500', 'ring-opacity-50');
+            }, 2000);
+          }
+        }
 
-    <div class="step" id="step13">
-      <h2>Step 13: Oasis Management</h2>
-      <p>
-        You can manage multiple Oases for servers. Only 3 Oases will be active when starting 3 servers.
-      </p>
-      <ul>
-        <li>
-          To launch event maps in different root systems or local systems:
-        </li>
-        <ul>
-          <li>
-            The <strong>Provider Key</strong> and
-            <strong>Customer Key</strong> must match those used in the same Realm.
-          </li>
-          <li>
-            Event maps can be enabled under the
-            <strong>Events</strong> section in the dashboard.
-          </li>
-        </ul>
-      </ul>
-    </div>
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+          anchor.addEventListener('click', function (e) {
+            e.preventDefault();
+            const targetId = this.getAttribute('href');
+            const targetElement = document.querySelector(targetId);
 
-    <div class="step" id="support">
-      <h2>Additional Support</h2>
-      <p>
-        For questions, consult the friendly developers or community members on Discord:
-      </p>
-      <ul>
-        <li>
-          Discord channel:
-          <a
-            href="https://discord.com/channels/440538424991154177/870332804578304070/870475904625836032"
-            >https://discord.com/channels/440538424991154177/870332804578304070/870475904625836032</a
-          >
-        </li>
-      </ul>
-    </div>
+            if (targetElement) {
+              targetElement.scrollIntoView({ behavior: 'smooth' });
+              history.pushState(null, null, targetId);
+              targetElement.classList.add('ring-4', 'ring-lo-orange-500', 'ring-opacity-50');
+              setTimeout(() => {
+                targetElement.classList.remove('ring-4', 'ring-lo-orange-500', 'ring-opacity-50');
+              }, 2000);
+            }
+          });
+        });
+      });
+    </script>
   </body>
 </html>
